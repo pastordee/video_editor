@@ -6,6 +6,18 @@ import 'package:video_editor_example/widgets/export_result.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_editor/video_editor.dart';
+import 'package:tapioca_v2/tapioca_v2.dart';
+import 'package:video_player/video_player.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:tapioca_v2/tapioca_v2.dart';
+import 'package:video_editor/src/controller.dart';
+import 'package:video_editor/src/utils/helpers.dart';
+import 'package:video_editor/src/models/cover_data.dart';
+import 'package:video_editor/src/models/transform_data.dart';
+import 'package:video_editor/src/widgets/crop/crop_mixin.dart';
 
 void main() => runApp(
       MaterialApp(
@@ -88,7 +100,7 @@ class _VideoEditorState extends State<VideoEditor> {
   late final VideoEditorController _controller = VideoEditorController.file(
     widget.file,
     minDuration: const Duration(seconds: 1),
-    maxDuration: const Duration(seconds: 10),
+    maxDuration: const Duration(seconds: 90),
   );
 
   @override
@@ -138,7 +150,7 @@ class _VideoEditorState extends State<VideoEditor> {
     await ExportService.runFFmpegCommand(
       await config.getExecuteConfig(),
       onProgress: (stats) {
-        _exportingProgress.value = config.getFFmpegProgress(stats.getTime());
+        _exportingProgress.value = config.getFFmpegProgress(stats.getTime().toInt());
       },
       onError: (e, s) => _showErrorSnackBar("Error on export video :("),
       onCompleted: (file) {
@@ -190,13 +202,12 @@ class _VideoEditorState extends State<VideoEditor> {
                         _topNavBar(),
                         Expanded(
                           child: DefaultTabController(
-                            length: 2,
+                            length: 3,
                             child: Column(
                               children: [
                                 Expanded(
                                   child: TabBarView(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
+                                    physics: const NeverScrollableScrollPhysics(),
                                     children: [
                                       Stack(
                                         alignment: Alignment.center,
@@ -229,7 +240,40 @@ class _VideoEditorState extends State<VideoEditor> {
                                           ),
                                         ],
                                       ),
-                                      CoverViewer(controller: _controller)
+                                      CoverViewer(controller: _controller),
+                                      // makeVideo(_controller.file.path) as Widget,
+                                      // Stack(
+                                      //   alignment: Alignment.center,
+                                      //   children: [
+                                      //     CropGridViewer.preview(
+                                      //         controller: _controller),
+                                      //     AnimatedBuilder(
+                                      //       animation: _controller.video,
+                                      //       builder: (_, __) => AnimatedOpacity(
+                                      //         opacity:
+                                      //             _controller.isPlaying ? 0 : 1,
+                                      //         duration: kThemeAnimationDuration,
+                                      //         child: GestureDetector(
+                                      //           onTap: _controller.video.play,
+                                      //           child: Container(
+                                      //             width: 40,
+                                      //             height: 40,
+                                      //             decoration:
+                                      //                 const BoxDecoration(
+                                      //               color: Colors.white,
+                                      //               shape: BoxShape.circle,
+                                      //             ),
+                                      //             child: const Icon(
+                                      //               Icons.play_arrow,
+                                      //               color: Colors.black,
+                                      //             ),
+                                      //           ),
+                                      //         ),
+                                      //       ),
+                                      //     ),
+                                      //   ],
+                                      // ),
+                                      AddTextViewer(controller: _controller)
                                     ],
                                   ),
                                 ),
@@ -238,12 +282,12 @@ class _VideoEditorState extends State<VideoEditor> {
                                   margin: const EdgeInsets.only(top: 10),
                                   child: Column(
                                     children: [
-                                      TabBar(
+                                      const TabBar(
                                         tabs: [
                                           Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.center,
-                                              children: const [
+                                              children: [
                                                 Padding(
                                                     padding: EdgeInsets.all(5),
                                                     child: Icon(
@@ -253,7 +297,7 @@ class _VideoEditorState extends State<VideoEditor> {
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
-                                            children: const [
+                                            children: [
                                               Padding(
                                                   padding: EdgeInsets.all(5),
                                                   child:
@@ -261,12 +305,22 @@ class _VideoEditorState extends State<VideoEditor> {
                                               Text('Cover')
                                             ],
                                           ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Padding(
+                                                  padding: EdgeInsets.all(5),
+                                                  child:
+                                                      Icon(Icons.video_label)),
+                                              Text('Text')
+                                            ],
+                                          )
                                         ],
                                       ),
                                       Expanded(
                                         child: TabBarView(
-                                          physics:
-                                              const NeverScrollableScrollPhysics(),
+                                          physics: const NeverScrollableScrollPhysics(),
                                           children: [
                                             Column(
                                               mainAxisAlignment:
@@ -274,6 +328,7 @@ class _VideoEditorState extends State<VideoEditor> {
                                               children: _trimSlider(),
                                             ),
                                             _coverSelection(),
+                                            _addText(),
                                           ],
                                         ),
                                       ),
@@ -451,5 +506,88 @@ class _VideoEditorState extends State<VideoEditor> {
         ),
       ),
     );
+  }
+
+  Widget _addText() {
+    return SingleChildScrollView(
+      child: Center(
+        child: Container(
+          color: Colors.blue,
+          margin: const EdgeInsets.all(15),
+          // child: AddTextViewer(controller: _controller),
+        ),
+      ),
+    );
+  }
+  // ProgressDialog? progressDialog;
+
+  makeVideo(path) {
+    //  var tempDir = await getTemporaryDirectory();
+    //   final path ='${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}result.mp4';
+    //      print(tempDir);
+      final tapiocaBalls = [
+        TapiocaBall.filter(Filters.pink, 0.2),
+        TapiocaBall.textOverlay(
+            "text", 100, 10, 100, const Color(0xffffc0cb)),
+      ];
+      // return CropGridViewer.preview(controller: _controller);
+    // progressDialog!.show();
+    final cup = Cup(Content(path), tapiocaBalls);
+    cup.suckUp(path).then((v) async {
+    //   print("finished ; $v");
+      // return Container(color:Colors.yellowAccent ,);
+       VideoEditorController controller2 = VideoEditorController.file(
+          File(_controller.file.path),
+          minDuration: const Duration(seconds: 1),
+          maxDuration: const Duration(seconds: 90),
+        );
+      // var controller = VideoPlayerController.file(File(widget.video!));
+      return Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          CropGridViewer.preview(
+                                              controller: controller2),
+                                          AnimatedBuilder(
+                                            animation: controller2.video,
+                                            builder: (_, __) => AnimatedOpacity(
+                                              opacity:
+                                                  controller2.isPlaying ? 0 : 1,
+                                              duration: kThemeAnimationDuration,
+                                              child: GestureDetector(
+                                                onTap: controller2.video.play,
+                                                child: Container(
+                                                  width: 40,
+                                                  height: 40,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                    color: Colors.white,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.play_arrow,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+      // progressDialog!.hide();
+      // widget.onVideoDone!.call(path);
+
+      // _controller.dispose();
+      // _controller = VideoPlayerController.file(File(widget.video!));
+
+      // _controller.addListener(() {
+      //   // setState(() {});
+      // });
+      // _controller.video.setLooping(true);
+      // _controller.initialize().then((_) => setState(() {}));
+      // _controller.video.play();
+      // setState(() {});
+    }).catchError((e) {
+      CropGridViewer.preview(controller: _controller);
+    });
   }
 }
