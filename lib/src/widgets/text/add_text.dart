@@ -14,14 +14,22 @@ import 'package:video_editor/video_editor.dart';
 
 class AddTextViewer extends StatefulWidget {
   /// It is the viewer that show the selected cover
-  const AddTextViewer({
+   AddTextViewer({
     super.key,
     required this.controller,
     this.noCoverText = 'No selection',
+    this.text = '',
+    this.x = 100,
+    this.y = 100,
+    this.size = 100,
   });
 
   /// The [controller] param is mandatory so every change in the controller settings will propagate the crop parameters in the cover view
   final VideoEditorController controller;
+  String? text;
+  int? x;
+  int?  y;
+  int? size;
 
   /// The [noCoverText] param specifies the text to display when selectedCover is `null`
   final String noCoverText;
@@ -62,10 +70,11 @@ class _CoverViewerState extends State<AddTextViewer> with CropPreviewMixin {
                           '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}result.mp4';
                       print(tempDir);
     try {
+      
       final tapiocaBalls = [
         TapiocaBall.filter(Filters.pink, 0.2),
         TapiocaBall.textOverlay(
-            "text", 100, 100, 100, const Color(0xffffc0cb)),
+            widget.text!, widget.x!, widget.y!, widget.size!, const Color(0xffffc0cb)),
       ];
       print("will start");
       final cup = Cup(Content(widget.controller.file.path), tapiocaBalls);
