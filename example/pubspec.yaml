@@ -15,11 +15,12 @@ dependencies:
   video_editor:
     path: ../
 
-  fraction: ^4.1.4
-  image_picker: ^0.8.9
+  fraction: ^5.0.4
+  image_picker: ^1.1.2
   path: ^1.8.2
   video_player: ^2.6.1
-  ffmpeg_kit_flutter_min: ^6.0.3
+  ffmpeg_kit_flutter_min: any
+  
 
 flutter:
   uses-material-design: true

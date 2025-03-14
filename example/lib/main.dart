@@ -6,18 +6,6 @@ import 'package:video_editor_example/widgets/export_result.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_editor/video_editor.dart';
-import 'package:tapioca_v2/tapioca_v2.dart';
-import 'package:video_player/video_player.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:tapioca_v2/tapioca_v2.dart';
-import 'package:video_editor/src/controller.dart';
-import 'package:video_editor/src/utils/helpers.dart';
-import 'package:video_editor/src/models/cover_data.dart';
-import 'package:video_editor/src/models/transform_data.dart';
-import 'package:video_editor/src/widgets/crop/crop_mixin.dart';
 
 void main() => runApp(
       MaterialApp(
@@ -189,8 +177,12 @@ class _VideoEditorState extends State<VideoEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => false,
+
+     var deviceWidth = MediaQuery.of(context).size.width.toInt();
+      var deviceHeight = MediaQuery.of(context).size.height.toInt();
+
+    return PopScope(
+      
       child: Scaffold(
         backgroundColor: Colors.black,
         body: _controller.initialized
@@ -241,39 +233,10 @@ class _VideoEditorState extends State<VideoEditor> {
                                         ],
                                       ),
                                       CoverViewer(controller: _controller),
-                                      // makeVideo(_controller.file.path) as Widget,
-                                      // Stack(
-                                      //   alignment: Alignment.center,
-                                      //   children: [
-                                      //     CropGridViewer.preview(
-                                      //         controller: _controller),
-                                      //     AnimatedBuilder(
-                                      //       animation: _controller.video,
-                                      //       builder: (_, __) => AnimatedOpacity(
-                                      //         opacity:
-                                      //             _controller.isPlaying ? 0 : 1,
-                                      //         duration: kThemeAnimationDuration,
-                                      //         child: GestureDetector(
-                                      //           onTap: _controller.video.play,
-                                      //           child: Container(
-                                      //             width: 40,
-                                      //             height: 40,
-                                      //             decoration:
-                                      //                 const BoxDecoration(
-                                      //               color: Colors.white,
-                                      //               shape: BoxShape.circle,
-                                      //             ),
-                                      //             child: const Icon(
-                                      //               Icons.play_arrow,
-                                      //               color: Colors.black,
-                                      //             ),
-                                      //           ),
-                                      //         ),
-                                      //       ),
-                                      //     ),
-                                      //   ],
-                                      // ),
-                                      AddTextViewer(controller: _controller)
+                                     
+                                      AddTextViewer(controller: _controller, 
+                                      text:'For God so loved the world, that he gave his \nonly begotten Son, that whosoever believeth in him should not \nperish, but have everlasting life',
+                                       x:(deviceWidth / 3).toInt(),y:500,size: 40,)
                                     ],
                                   ),
                                 ),
@@ -512,82 +475,29 @@ class _VideoEditorState extends State<VideoEditor> {
     return SingleChildScrollView(
       child: Center(
         child: Container(
-          color: Colors.blue,
           margin: const EdgeInsets.all(15),
-          // child: AddTextViewer(controller: _controller),
+          child: SplitVideoSelection(
+            controller: _controller,
+            size: height + 10,
+            quantity: 8,
+            selectedCoverBuilder: (cover, size) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  cover,
+                  Icon(
+                    Icons.check_circle,
+                    color: const CoverSelectionStyle().selectedBorderColor,
+                  )
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
-  // ProgressDialog? progressDialog;
+  
 
-  makeVideo(path) {
-    //  var tempDir = await getTemporaryDirectory();
-    //   final path ='${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}result.mp4';
-    //      print(tempDir);
-      final tapiocaBalls = [
-        TapiocaBall.filter(Filters.pink, 0.2),
-        TapiocaBall.textOverlay(
-            "text", 100, 10, 100, const Color(0xffffc0cb)),
-      ];
-      // return CropGridViewer.preview(controller: _controller);
-    // progressDialog!.show();
-    final cup = Cup(Content(path), tapiocaBalls);
-    cup.suckUp(path).then((v) async {
-    //   print("finished ; $v");
-      // return Container(color:Colors.yellowAccent ,);
-       VideoEditorController controller2 = VideoEditorController.file(
-          File(_controller.file.path),
-          minDuration: const Duration(seconds: 1),
-          maxDuration: const Duration(seconds: 90),
-        );
-      // var controller = VideoPlayerController.file(File(widget.video!));
-      return Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          CropGridViewer.preview(
-                                              controller: controller2),
-                                          AnimatedBuilder(
-                                            animation: controller2.video,
-                                            builder: (_, __) => AnimatedOpacity(
-                                              opacity:
-                                                  controller2.isPlaying ? 0 : 1,
-                                              duration: kThemeAnimationDuration,
-                                              child: GestureDetector(
-                                                onTap: controller2.video.play,
-                                                child: Container(
-                                                  width: 40,
-                                                  height: 40,
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                    color: Colors.white,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.play_arrow,
-                                                    color: Colors.black,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-      // progressDialog!.hide();
-      // widget.onVideoDone!.call(path);
-
-      // _controller.dispose();
-      // _controller = VideoPlayerController.file(File(widget.video!));
-
-      // _controller.addListener(() {
-      //   // setState(() {});
-      // });
-      // _controller.video.setLooping(true);
-      // _controller.initialize().then((_) => setState(() {}));
-      // _controller.video.play();
-      // setState(() {});
-    }).catchError((e) {
-      CropGridViewer.preview(controller: _controller);
-    });
-  }
+  
 }
